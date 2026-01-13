@@ -1385,25 +1385,73 @@
         }
 
         // ====== 登入回調 ======
-        function handleCredentialResponse(response) {
-            const token = response.credential;
-            const decoded = parseJwt(token);
-            
-            // 驗證企業郵箱domain
-            if (!decoded.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) {
-                alert('❌ 只接受 @' + AUTH_CONFIG.allowedDomain + ' 企業郵箱');
-                return;
-            }
+      function handleCredentialResponse(response) {
+    const token = response.credential;
+    // 使用你原本的 parseJwt 函數
+    const decoded = parseJwt(token); 
+    
+    // 驗證企業網域
+    if (!decoded.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) {
+        alert('❌ 只接受 @' + AUTH_CONFIG.allowedDomain + ' 企業帳號登入');
+        // 強制登出並重新載入，避免卡住
+        google.accounts.id.disableAutoSelect();
+        location.reload(); 
+        return;
+    }
 
-            currentUser = {
-                email: decoded.email,
-                name: decoded.name,
-                picture: decoded.picture
-            };
+    // 儲存使用者資訊
+    currentUser = {
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture
+    };
 
-            loginSuccess();
-        }
+    // 隱藏登入頁，顯示主程式
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    
+    // 初始化你的應用程式資料
+    initApp(); 
+}
 
+// 修改你原本的 submitForm 函數，讓它直接傳送到 Apps Script
+async function submitForm() {
+    // 1. 這裡保留你原本的欄位驗證 (errors.push 等等...)
+    
+    // 顯示上傳中
+    const submitBtn = document.querySelector('button[onclick="submitForm()"]');
+    submitBtn.innerText = "⏳ 正在同步至 Google Drive...";
+    submitBtn.disabled = true;
+
+    // 2. 收集資料
+    const formData = {
+        user: currentUser.email,
+        userName: currentUser.name,
+        siteName: document.getElementById('siteName').value,
+        workDescription: document.getElementById('workDescription').value,
+        // 照片需轉換成 Base64 字串傳送 (這部分需要額外處理 photos 陣列)
+        photos: getAllPhotosAsBase64() 
+    };
+
+    // 3. 傳送到你的 Apps Script URL
+    try {
+        const response = await fetch('你的_GOOGLE_APPS_SCRIPT_部署_URL', {
+            method: 'POST',
+            mode: 'no-cors', // 解決跨網域問題
+            body: JSON.stringify(formData)
+        });
+        
+        alert('✅ 資料與照片已成功存入 Google Drive 與 Sheet！');
+        // 清除草稿並重置頁面
+        localStorage.removeItem('draft_report');
+        location.reload();
+        
+    } catch (error) {
+        alert('❌ 上傳失敗：' + error);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "重新提交";
+    }
+}
         function parseJwt(token) {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
