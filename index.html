@@ -1828,29 +1828,5 @@ async function submitForm() {
             alert('✅ 表單已成功提交！JSON檔案已下載，請傳給專職工程師');
         }
     </script>
-   <!-- 
-      ============================================
-      【重要】HTML 按鈕配置示例
-      ============================================
-      將以下內容替換到你的 HTML 對應位置
-    -->
-
-    <!-- 簽到照按鈕 -->
-    <button type="button" onclick="capturePhoto('checkInPhotoInput')">📷 點擊拍照簽到</button>
-    <input type="file" id="checkInPhotoInput" style="display:none;">
-
-    <!-- 簽出照按鈕 -->
-    <button type="button" onclick="capturePhoto('checkOutPhotoInput')">📷 點擊拍照簽出</button>
-    <input type="file" id="checkOutPhotoInput" style="display:none;">
-
-    <!-- 缺陷照片上傳示例（重複用於多個缺陷） -->
-    <button type="button" onclick="capturePhoto('defectPhotoInput_0')">📷 上傳</button>
-    <input type="file" id="defectPhotoInput_0" class="defectPhotoInput" style="display:none;">
-
-    <!-- 完整提交按鈕 -->
-    <button type="button" onclick="handleCompleteSubmit()">✅ 完整提交</button>
-
-    <!-- 清空表單按鈕 -->
-    <button type="button" onclick="clearForm()">🗑️ 清空表單</button>
 </body>
 </html>
