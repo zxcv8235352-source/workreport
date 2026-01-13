@@ -1,20 +1,10 @@
-<!-- 
-工程日報APP - 完整版本
-包含：
-1. Google企業帳號登入
-2. 照片上傳功能
-3. 8個獨立頁面
-4. 自動草稿保存
-5. 簽到簽出系統
-6. 品質缺失必須附照
--->
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <link rel="manifest" href="manifest.json"> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>工程日報APP - Google企業帳號版</title>
+    <title>工程日報系統 - mekongkh.net 專屬</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -27,1805 +17,214 @@
             --border: #ddd;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-            background: var(--light);
-            color: #333;
-        }
-
-        .app-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ========== 登入頁面 ========== */
-        #loginPage {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .login-container h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: var(--dark);
-        }
-
-        .login-container p {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .google-login-btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .admin-note {
-            background: #fff3cd;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #856404;
-            margin-top: 20px;
-        }
-
-        /* ========== 儀表板 ========== */
-        #dashboardPage {
-            display: none;
-            flex: 1;
-            flex-direction: column;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-
-        .header-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            opacity: 0.95;
-        }
-
-        .user-email {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.3);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.5);
-        }
-
-        .content-wrapper {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        /* ========== 頁面路由 ========== */
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ========== 導航頁籤 ========== */
-        .nav-tabs {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 0 15px;
-        }
-
-        .nav-btn {
-            padding: 12px;
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            text-align: center;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .nav-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .nav-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .nav-btn.completed {
-            background: var(--success);
-            color: white;
-            border-color: var(--success);
-        }
-
-        /* ========== 表單樣式 ========== */
-        .page-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .page-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            font-size: 13px;
-            color: var(--dark);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: inherit;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 5px rgba(33,150,243,0.3);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .required::after {
-            content: ' *';
-            color: var(--danger);
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        @media (max-width: 600px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ========== 照片上傳 ========== */
-        .photo-upload-area {
-            border: 2px dashed var(--primary);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            background: #f0f8ff;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .photo-upload-area:hover {
-            background: #e0f0ff;
-            border-color: var(--primary);
-        }
-
-        .photo-upload-area input {
-            display: none;
-        }
-
-        .photo-preview {
-            margin-top: 15px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 10px;
-        }
-
-        .photo-item {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .photo-remove {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 2px 5px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
-        /* ========== 簽到簽出 ========== */
-        .checkin-status {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .status-card {
-            flex: 1;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            background: var(--light);
-            border: 2px solid var(--border);
-        }
-
-        .status-card.checked {
-            background: #d4edda;
-            border-color: var(--success);
-        }
-
-        .status-card.not-checked {
-            background: #f8d7da;
-            border-color: var(--danger);
-        }
-
-        .status-time {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* ========== 按鈕 ========== */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-        button {
-            flex: 1;
-            min-width: 100px;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-        }
-
-        .btn-primary:hover {
-            background: #1976D2;
-        }
-
-        .btn-success {
-            background: var(--success);
-        }
-
-        .btn-success:hover {
-            background: #45a049;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-        }
-
-        .btn-warning:hover {
-            background: #e68900;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-        }
-
-        .btn-danger:hover {
-            background: #da190b;
-        }
-
-        /* ========== 表格 ========== */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 12px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        th {
-            background: var(--light);
-            padding: 10px;
-            text-align: left;
-            font-weight: bold;
-            border-bottom: 2px solid var(--border);
-        }
-
-        td {
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        /* ========== 提示 ========== */
-        .alert {
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* ========== 頁腳 ========== */
-        .page-footer {
-            padding: 15px;
-            background: var(--dark);
-            color: white;
-            text-align: center;
-            font-size: 12px;
-            margin-top: auto;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow-x: hidden; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: var(--light); color: #333; }
+        .app-container { min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* 登入頁面 */
+        #loginPage { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; }
+        .login-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 400px; width: 100%; text-align: center; }
+        .admin-note { background: #fff3cd; padding: 12px; border-radius: 6px; font-size: 12px; color: #856404; margin-top: 20px; }
+
+        /* 儀表板 */
+        #mainApp { display: none; flex: 1; flex-direction: column; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .header-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .logout-btn { background: rgba(255,255,255,0.3); border: none; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .content-wrapper { flex: 1; overflow-y: auto; padding: 15px; }
+
+        /* 表單與按鈕樣式 */
+        .page { display: none; }
+        .page.active { display: block; }
+        .nav-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .nav-btn { padding: 12px; background: white; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; cursor: pointer; }
+        .nav-btn.active { background: var(--primary); color: white; }
+        .page-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 13px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        .required::after { content: ' *'; color: var(--danger); }
+        .photo-upload-area { border: 2px dashed var(--primary); border-radius: 8px; padding: 20px; text-align: center; background: #f0f8ff; cursor: pointer; }
+        .photo-preview img { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; margin-top: 10px; }
+        .btn-success { background: var(--success); color: white; padding: 15px; width: 100%; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-success:disabled { background: #ccc; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        
-        <!-- =============== 登入頁面 =============== -->
         <div id="loginPage">
             <div class="login-container">
                 <h1>🏗️ 工程日報系統</h1>
-                <p>用公司企業帳號登入</p>
-                <div id="googleLoginBtn" style="margin-bottom: 20px;"></div>
-                <div class="admin-note">
-                    ℹ️ 只接受 @company.com 企業郵箱登入
-                </div>
+                <p>請使用 mekongkh.net 帳號登入</p>
+                <div id="googleLoginBtn"></div>
+                <div class="admin-note">ℹ️ 系統會自動將照片存入 Google Drive 日期資料夾</div>
             </div>
         </div>
 
-        <!-- =============== 儀表板 & 頁面內容 =============== -->
-        <div id="dashboardPage">
+        <div id="mainApp">
             <div class="header">
                 <h1>📋 工程日報表</h1>
                 <div class="header-info">
-                    <div class="user-email">
-                        <span id="userEmail"></span>
-                    </div>
+                    <span id="userEmail"></span>
                     <button class="logout-btn" onclick="logout()">登出</button>
                 </div>
             </div>
 
             <div class="content-wrapper">
-                <!-- 導航頁籤 -->
-                <div class="nav-tabs" id="navTabs">
-                    <button class="nav-btn active" data-page="page-basic">📋<br>基本資訊</button>
-                    <button class="nav-btn" data-page="page-schedule">📈<br>進度資訊</button>
-                    <button class="nav-btn" data-page="page-workforce">👥<br>出工人數</button>
-                    <button class="nav-btn" data-page="page-materials">📦<br>材料使用</button>
+                <div class="nav-tabs">
+                    <button class="nav-btn active" onclick="switchPage('page-1')">基本資訊</button>
+                    <button class="nav-btn" onclick="switchPage('page-2')">工作內容</button>
                 </div>
 
-                <div class="nav-tabs" id="navTabs2">
-                    <button class="nav-btn" data-page="page-equipment">🔧<br>機具設備</button>
-                    <button class="nav-btn" data-page="page-work">✍️<br>工作內容</button>
-                    <button class="nav-btn" data-page="page-quality">⚠️<br>品質缺失</button>
-                    <button class="nav-btn" data-page="page-notes">📝<br>記事簽核</button>
-                </div>
-
-                <!-- 頁面 1: 基本資訊 -->
-                <div id="page-basic" class="page active">
+                <div id="page-1" class="page active">
                     <div class="page-content">
-                        <div class="page-title">📋 基本資訊</div>
-
-                        <div class="checkin-status">
-                            <div class="status-card" id="checkinStatus">
-                                <div>簽到狀態</div>
-                                <div id="checkinTime" class="status-time">未簽到</div>
-                            </div>
-                            <div class="status-card" id="checkoutStatus">
-                                <div>簽出狀態</div>
-                                <div id="checkoutTime" class="status-time">未簽出</div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="required">拍照簽到</label>
-                            <div class="photo-upload-area" onclick="document.getElementById('checkinPhotoInput').click()">
-                                📷 點擊拍照簽到
-                            </div>
-                            <input type="file" id="checkinPhotoInput" accept="image/*" capture="environment">
-                            <div id="checkinPhotoPreview" class="photo-preview"></div>
-                        </div>
-
                         <div class="form-group">
                             <label class="required">報表日期</label>
-                            <input type="date" id="reportDate" required>
+                            <input type="date" id="reportDate">
                         </div>
-
-                        <div class="two-column">
-                            <div class="form-group">
-                                <label class="required">工程師姓名</label>
-                                <input type="text" id="engineerName" placeholder="系統自動填入" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="required">工地代碼</label>
-                                <input type="text" id="siteCode" placeholder="例：SITE-001">
-                            </div>
-                        </div>
-
                         <div class="form-group">
-                            <label class="required">施工地點</label>
-                            <input type="text" id="siteLocation" placeholder="例：台北市信義區施工地A">
+                            <label class="required">工地名稱/代碼</label>
+                            <input type="text" id="siteName" placeholder="例：SITE-001">
                         </div>
-
-                        <div class="two-column">
-                            <div class="form-group">
-                                <label class="required">工程名稱</label>
-                                <input type="text" id="projectName">
-                            </div>
-                            <div class="form-group">
-                                <label>工程階段</label>
-                                <select id="phase">
-                                    <option value="">-- 請選擇 --</option>
-                                    <option value="基礎工程">基礎工程</option>
-                                    <option value="結構工程">結構工程</option>
-                                    <option value="粗裝修">粗裝修</option>
-                                    <option value="精裝修">精裝修</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="two-column">
-                            <div class="form-group">
-                                <label>天氣狀況</label>
-                                <select id="weather">
-                                    <option value="">-- 請選擇 --</option>
-                                    <option value="晴天">晴天</option>
-                                    <option value="陰天">陰天</option>
-                                    <option value="小雨">小雨</option>
-                                    <option value="大雨">大雨</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>是否計入工期</label>
-                                <select id="countedInSchedule">
-                                    <option value="是">是</option>
-                                    <option value="否">否</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button class="btn-success" onclick="savePage('basic')">💾 保存此頁面</button>
-                    </div>
-                </div>
-
-                <!-- 頁面 2: 進度資訊 -->
-                <div id="page-schedule" class="page">
-                    <div class="page-content">
-                        <div class="page-title">📈 進度資訊</div>
-
                         <div class="form-group">
-                            <label class="required">預定工期(天)</label>
-                            <input type="number" id="plannedDays" placeholder="365">
+                            <label class="required">簽到拍照</label>
+                            <div class="photo-upload-area" onclick="document.getElementById('checkinPhotoInput').click()">📷 點擊拍照簽到</div>
+                            <input type="file" id="checkinPhotoInput" accept="image/*" capture="environment" style="display:none">
+                            <div id="checkinPreview" class="photo-preview"></div>
                         </div>
-
-                        <div class="two-column">
-                            <div class="form-group">
-                                <label class="required">實際工期(天)</label>
-                                <input type="number" id="actualDays" placeholder="28">
-                            </div>
-                            <div class="form-group">
-                                <label class="required">剩餘天數</label>
-                                <input type="number" id="remainingDays" placeholder="337">
-                            </div>
-                        </div>
-
-                        <div class="two-column">
-                            <div class="form-group">
-                                <label>今日進度(%)</label>
-                                <input type="number" id="progressToday" min="0" max="100" placeholder="5">
-                            </div>
-                            <div class="form-group">
-                                <label>累計進度(%)</label>
-                                <input type="number" id="cumulativeProgress" min="0" max="100" placeholder="7.7">
-                            </div>
-                        </div>
-
-                        <button class="btn-success" onclick="savePage('schedule')">💾 保存此頁面</button>
                     </div>
                 </div>
 
-                <!-- 頁面 3: 出工人數 -->
-                <div id="page-workforce" class="page">
+                <div id="page-2" class="page">
                     <div class="page-content">
-                        <div class="page-title">👥 出工情形</div>
-
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>工種</th>
-                                        <th>上午</th>
-                                        <th>下午</th>
-                                        <th>夜間</th>
-                                        <th>合計</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="workforceTableBody">
-                                    <tr>
-                                        <td><input type="text" class="workforce-name" placeholder="工種"></td>
-                                        <td><input type="number" class="workforce-morning" min="0" value="0"></td>
-                                        <td><input type="number" class="workforce-afternoon" min="0" value="0"></td>
-                                        <td><input type="number" class="workforce-night" min="0" value="0"></td>
-                                        <td><span class="workforce-total">0</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <button class="btn-primary" onclick="addWorkforceRow()">+ 新增工種</button>
-                        <button class="btn-success" onclick="savePage('workforce'" style="margin-top: 10px;">💾 保存此頁面</button>
-                    </div>
-                </div>
-
-                <!-- 頁面 4: 材料使用 -->
-                <div id="page-materials" class="page">
-                    <div class="page-content">
-                        <div class="page-title">📦 主要材料使用情形</div>
-
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>材料名稱</th>
-                                        <th>單位</th>
-                                        <th>進場量</th>
-                                        <th>使用量</th>
-                                        <th>庫存</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="materialsTableBody">
-                                    <tr>
-                                        <td><input type="text" class="material-name" placeholder="材料名稱"></td>
-                                        <td><input type="text" class="material-unit" placeholder="噸/m³" style="width:50px;"></td>
-                                        <td><input type="number" class="material-arrived" min="0" step="0.01" value="0"></td>
-                                        <td><input type="number" class="material-used" min="0" step="0.01" value="0"></td>
-                                        <td><span class="material-inventory">0</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <button class="btn-primary" onclick="addMaterialRow()">+ 新增材料</button>
-                        <button class="btn-success" onclick="savePage('materials')" style="margin-top: 10px;">💾 保存此頁面</button>
-                    </div>
-                </div>
-
-                <!-- 頁面 5: 機具設備 -->
-                <div id="page-equipment" class="page">
-                    <div class="page-content">
-                        <div class="page-title">🔧 主要機具設備使用情形</div>
-
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>設備名稱</th>
-                                        <th>使用說明</th>
-                                        <th>工作小時</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="equipmentTableBody">
-                                    <tr>
-                                        <td><input type="text" class="equipment-name" placeholder="設備名稱"></td>
-                                        <td><input type="text" class="equipment-desc" placeholder="使用說明"></td>
-                                        <td><input type="number" class="equipment-hours" min="0" step="0.5" value="0"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <button class="btn-primary" onclick="addEquipmentRow()">+ 新增設備</button>
-                        <button class="btn-success" onclick="savePage('equipment')" style="margin-top: 10px;">💾 保存此頁面</button>
-                    </div>
-                </div>
-
-                <!-- 頁面 6: 工作內容 -->
-                <div id="page-work" class="page">
-                    <div class="page-content">
-                        <div class="page-title">✍️ 今日工作內容與進度差異</div>
-
                         <div class="form-group">
                             <label class="required">今日工作內容</label>
-                            <textarea id="workDescription" placeholder="描述今天完成的工作..."></textarea>
+                            <textarea id="workDescription" placeholder="請詳細描述今日工程進度..."></textarea>
                         </div>
-
                         <div class="form-group">
-                            <label>與計劃的差異</label>
-                            <textarea id="differenceFromPlan" placeholder="進度是否快於或慢於計劃..."></textarea>
+                            <label class="required">簽出拍照</label>
+                            <div class="photo-upload-area" onclick="document.getElementById('checkoutPhotoInput').click()">📷 點擊拍照簽出</div>
+                            <input type="file" id="checkoutPhotoInput" accept="image/*" capture="environment" style="display:none">
+                            <div id="checkoutPreview" class="photo-preview"></div>
                         </div>
-
-                        <div class="form-group">
-                            <label>差異原因</label>
-                            <textarea id="reasonForDifference" placeholder="說明原因..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>因應對策</label>
-                            <textarea id="countermeasures" placeholder="後續因應措施..."></textarea>
-                        </div>
-
-                        <button class="btn-success" onclick="savePage('work')">💾 保存此頁面</button>
+                        <button id="submitBtn" class="btn-success" onclick="submitForm()">✅ 完整提交至雲端</button>
                     </div>
                 </div>
-
-                <!-- 頁面 7: 品質缺失 【必須附照片】 -->
-                <div id="page-quality" class="page">
-                    <div class="page-content">
-                        <div class="page-title">⚠️ 品質與缺陷紀錄 【必須附照片】</div>
-
-                        <div class="alert alert-warning">
-                            ⚠️ 如有缺陷記錄，必須上傳照片，否則無法提交
-                        </div>
-
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>缺陷描述</th>
-                                        <th>嚴重程度</th>
-                                        <th>狀態</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="qualityTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                            <h3 style="font-size: 14px; margin-bottom: 10px;">新增缺陷</h3>
-
-                            <div class="form-group">
-                                <label class="required">缺陷描述</label>
-                                <input type="text" id="qualityDesc" placeholder="例：鋼筋保護層厚度不符">
-                            </div>
-
-                            <div class="two-column">
-                                <div class="form-group">
-                                    <label>嚴重程度</label>
-                                    <select id="qualitySeverity">
-                                        <option value="輕">輕</option>
-                                        <option value="中">中</option>
-                                        <option value="重">重</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>狀態</label>
-                                    <select id="qualityStatus">
-                                        <option value="新增">新增</option>
-                                        <option value="整改中">整改中</option>
-                                        <option value="已整改">已整改</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="required">缺陷照片 【必須】</label>
-                                <div class="photo-upload-area" onclick="document.getElementById('qualityPhotoInput').click()">
-                                    📷 點擊上傳缺陷照片
-                                </div>
-                                <input type="file" id="qualityPhotoInput" accept="image/*" capture="environment" multiple>
-                                <div id="qualityPhotoPreview" class="photo-preview"></div>
-                            </div>
-
-                            <button class="btn-warning" onclick="addQualityIssue()">+ 新增缺陷</button>
-                        </div>
-
-                        <button class="btn-success" onclick="savePage('quality')" style="margin-top: 15px;">💾 保存此頁面</button>
-                    </div>
-                </div>
-
-                <!-- 頁面 8: 記事簽核 -->
-                <div id="page-notes" class="page">
-                    <div class="page-content">
-                        <div class="page-title">📝 工地重要記事與簽核</div>
-
-                        <div class="form-group">
-                            <label>工地重要記事</label>
-                            <textarea id="importantMatters" placeholder="例：通知材料供應商..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>廠商通知</label>
-                            <textarea id="vendorNotification" placeholder="例：已通知供應商..."></textarea>
-                        </div>
-
-                        <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                            <h3 style="font-size: 14px; margin-bottom: 12px;">簽核簽名</h3>
-                            <div class="two-column">
-                                <div class="form-group">
-                                    <label>工務部主管</label>
-                                    <input type="text" id="constructionManager" placeholder="簽名或姓名">
-                                </div>
-                                <div class="form-group">
-                                    <label>工地主任</label>
-                                    <input type="text" id="siteDirector" placeholder="簽名或姓名">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="required">拍照簽出</label>
-                            <div class="photo-upload-area" onclick="document.getElementById('checkoutPhotoInput').click()">
-                                📷 點擊拍照簽出
-                            </div>
-                            <input type="file" id="checkoutPhotoInput" accept="image/*" capture="environment">
-                            <div id="checkoutPhotoPreview" class="photo-preview"></div>
-                        </div>
-
-                        <div class="btn-group" style="margin-top: 20px;">
-                            <button class="btn-warning" onclick="resetForm()">清空表單</button>
-                            <button class="btn-primary" onclick="downloadJSON()">📥 下載JSON</button>
-                            <button class="btn-success" onclick="submitForm()">✅ 完整提交</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="page-footer">
-                工程日報APP v2.0 | 所有資料儲存在手機本地 | 支持 iOS Safari & Android Chrome
             </div>
         </div>
-
     </div>
 
     <script>
-  
-        // 配置後端 URL
-        const GAS_DEPLOYMENT_URL = "https://script.google.com/macros/s/AKfycby26fJv411nMlgHXa8mcczMgHEZ3djCwF4XHHUI96R3GRNh7ySRdQO7JpDDowsJQY6Z/exec"; // 例如：https://script.google.com/macros/d/xxxxx/userweb
-        
-        // ==================== 照片捕捉和轉換 ====================
-
-        /**
-         * 拍照或上傳照片 - 返回 Base64 編碼
-         */
-        async function capturePhoto(inputId) {
-          return new Promise((resolve) => {
-            const input = document.getElementById(inputId);
-            input.accept = "image/*";
-            input.capture = "environment";
-            
-            input.onchange = async function(e) {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                  resolve(event.target.result); // Base64 字符串
-                };
-                reader.readAsDataURL(file);
-              } else {
-                resolve(null);
-              }
-            };
-            
-            input.click();
-          });
-        }
-
-        /**
-         * 文件轉 Base64
-         */
-        function fileToBase64(file) {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(file);
-          });
-        }
-
-        /**
-         * 轉換所有照片數據
-         */
-        async function collectAllPhotos() {
-          const photos = {};
-          
-          // 簽到照
-          const checkInPhotoInput = document.getElementById("checkInPhotoInput");
-          if (checkInPhotoInput && checkInPhotoInput.files.length > 0) {
-            const file = checkInPhotoInput.files[0];
-            photos.checkInPhoto = await fileToBase64(file);
-          }
-          
-          // 簽出照
-          const checkOutPhotoInput = document.getElementById("checkOutPhotoInput");
-          if (checkOutPhotoInput && checkOutPhotoInput.files.length > 0) {
-            const file = checkOutPhotoInput.files[0];
-            photos.checkOutPhoto = await fileToBase64(file);
-          }
-          
-          // 缺陷照片 - 收集所有缺陷照片
-          const defectPhotoInputs = document.querySelectorAll(".defectPhotoInput");
-          const defectPhotos = [];
-          for (const input of defectPhotoInputs) {
-            if (input.files.length > 0) {
-              const file = input.files[0];
-              const base64 = await fileToBase64(file);
-              defectPhotos.push(base64);
-            }
-          }
-          photos.defectPhotos = defectPhotos;
-          
-          return photos;
-        }
-
-        // ==================== 表單資料收集 ====================
-
-        /**
-         * 收集所有表單資料
-         */
-        async function collectAllFormData() {
-          const formData = {
-            // 基本資訊
-            reportDate: document.getElementById("reportDate")?.value || new Date().toISOString().split('T')[0],
-            engineerName: document.getElementById("engineerName")?.value || "",
-            projectCode: document.getElementById("projectCode")?.value || "",
-            location: document.getElementById("location")?.value || "",
-            projectName: document.getElementById("projectName")?.value || "",
-            projectStage: document.getElementById("projectStage")?.value || "",
-            weather: document.getElementById("weather")?.value || "",
-            countTowardsPeriod: document.getElementById("countTowardsPeriod")?.value || "",
-            
-            // 進度資訊
-            plannedDays: document.getElementById("plannedDays")?.value || "",
-            actualDays: document.getElementById("actualDays")?.value || "",
-            remainingDays: document.getElementById("remainingDays")?.value || "",
-            dailyProgress: document.getElementById("dailyProgress")?.value || "",
-            cumulativeProgress: document.getElementById("cumulativeProgress")?.value || "",
-            
-            // 工作內容
-            workContent: document.getElementById("workContent")?.value || "",
-            differenceFromPlan: document.getElementById("differenceFromPlan")?.value || "",
-            differenceCause: document.getElementById("differenceCause")?.value || "",
-            counterMeasure: document.getElementById("counterMeasure")?.value || "",
-            
-            // 缺陷資訊
-            defectDescription: document.getElementById("defectDescription")?.value || "",
-            defectSeverity: document.getElementById("defectSeverity")?.value || "",
-            defectStatus: document.getElementById("defectStatus")?.value || "",
-            
-            // 簽核資訊
-            siteMemo: document.getElementById("siteMemo")?.value || "",
-            supplierNotice: document.getElementById("supplierNotice")?.value || "",
-            
-            // 出工人數資料
-            workerData: collectWorkerData(),
-            
-            // 材料使用資料
-            materialsData: collectMaterialsData(),
-            
-            // 機具設備資料
-            equipmentData: collectEquipmentData()
-          };
-          
-          // 收集所有照片
-          const photos = await collectAllPhotos();
-          Object.assign(formData, photos);
-          
-          // 添加提交時間戳
-          formData.submissionTime = new Date().toLocaleString('zh-TW');
-          
-          return formData;
-        }
-
-        /**
-         * 收集出工人數資料
-         */
-        function collectWorkerData() {
-          const workers = [];
-          const workerRows = document.querySelectorAll(".workerRow");
-          
-          workerRows.forEach(row => {
-            const workerType = row.querySelector(".workerType")?.value;
-            const morning = row.querySelector(".morningWorkers")?.value;
-            const afternoon = row.querySelector(".afternoonWorkers")?.value;
-            const night = row.querySelector(".nightWorkers")?.value;
-            
-            if (workerType) {
-              workers.push({
-                type: workerType,
-                morning: parseInt(morning) || 0,
-                afternoon: parseInt(afternoon) || 0,
-                night: parseInt(night) || 0
-              });
-            }
-          });
-          
-          return workers;
-        }
-
-        /**
-         * 收集材料使用資料
-         */
-        function collectMaterialsData() {
-          const materials = [];
-          const materialRows = document.querySelectorAll(".materialRow");
-          
-          materialRows.forEach(row => {
-            const name = row.querySelector(".materialName")?.value;
-            const unit = row.querySelector(".materialUnit")?.value;
-            const incoming = row.querySelector(".materialIncoming")?.value;
-            const used = row.querySelector(".materialUsed")?.value;
-            const stock = row.querySelector(".materialStock")?.value;
-            
-            if (name) {
-              materials.push({
-                name: name,
-                unit: unit,
-                incoming: parseInt(incoming) || 0,
-                used: parseInt(used) || 0,
-                stock: parseInt(stock) || 0
-              });
-            }
-          });
-          
-          return materials;
-        }
-
-        /**
-         * 收集機具設備資料
-         */
-        function collectEquipmentData() {
-          const equipment = [];
-          const equipmentRows = document.querySelectorAll(".equipmentRow");
-          
-          equipmentRows.forEach(row => {
-            const name = row.querySelector(".equipmentName")?.value;
-            const usage = row.querySelector(".equipmentUsage")?.value;
-            const hours = row.querySelector(".equipmentHours")?.value;
-            
-            if (name) {
-              equipment.push({
-                name: name,
-                usage: usage,
-                hours: parseInt(hours) || 0
-              });
-            }
-          });
-          
-          return equipment;
-        }
-
-        // ==================== 後端提交 ====================
-
-        /**
-         * 發送表單資料到 Google Apps Script
-         */
-        async function submitToBackend(formData) {
-          try {
-            console.log("正在提交資料到後端...");
-            
-            const response = await fetch(GAS_DEPLOYMENT_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(formData)
-            });
-            
-            const result = await response.json();
-            
-            return result;
-          } catch (error) {
-            console.error("後端提交失敗:", error);
-            return {
-              success: false,
-              error: error.message
-            };
-          }
-        }
-
-        // ==================== 驗證和提交 ====================
-
-        /**
-         * 驗證表單 - 確保所有必填欄位已填
-         */
-        function validateForm(formData) {
-          const errors = [];
-          
-          if (!formData.reportDate) errors.push("請輸入報表日期");
-          if (!formData.engineerName) errors.push("請輸入工程師姓名");
-          if (!formData.projectCode) errors.push("請輸入工地代碼");
-          if (!formData.location) errors.push("請輸入施工地點");
-          if (!formData.projectStage) errors.push("請選擇工程階段");
-          if (!formData.weather) errors.push("請選擇天氣狀況");
-          
-          // 檢查缺陷照片 - 如有缺陷記錄必須上傳照片
-          if (formData.defectDescription && formData.defectPhotos.length === 0) {
-            errors.push("如有缺陷記錄，必須上傳缺陷照片");
-          }
-          
-          return {
-            valid: errors.length === 0,
-            errors: errors
-          };
-        }
-
-        /**
-         * UI 提示函數
-         */
-        function showLoadingMessage(message) {
-          const alertDiv = document.getElementById("submitAlert") || createAlertDiv();
-          alertDiv.className = "alert alert-info";
-          alertDiv.textContent = message;
-          alertDiv.style.display = "block";
-        }
-
-        function showSuccessMessage(message) {
-          const alertDiv = document.getElementById("submitAlert") || createAlertDiv();
-          alertDiv.className = "alert alert-success";
-          alertDiv.textContent = message;
-          alertDiv.style.display = "block";
-        }
-
-        function showErrorMessage(message) {
-          const alertDiv = document.getElementById("submitAlert") || createAlertDiv();
-          alertDiv.className = "alert alert-danger";
-          alertDiv.textContent = message;
-          alertDiv.style.display = "block";
-        }
-
-        function createAlertDiv() {
-          const div = document.createElement("div");
-          div.id = "submitAlert";
-          div.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            z-index: 10000;
-            max-height: 200px;
-            overflow-y: auto;
-            font-weight: bold;
-            white-space: pre-wrap;
-            font-family: Arial, sans-serif;
-          `;
-          document.body.insertBefore(div, document.body.firstChild);
-          return div;
-        }
-
-        // 樣式
-        const alertStyles = `
-        .alert {
-          padding: 15px;
-          border-radius: 4px;
-          margin: 10px 0;
-          font-weight: bold;
-        }
-
-        .alert-info {
-          background-color: #d1ecf1;
-          border: 1px solid #bee5eb;
-          color: #0c5460;
-        }
-
-        .alert-success {
-          background-color: #d4edda;
-          border: 1px solid #c3e6cb;
-          color: #155724;
-        }
-
-        .alert-danger {
-          background-color: #f8d7da;
-          border: 1px solid #f5c6cb;
-          color: #721c24;
-        }
-
-        .alert-warning {
-          background-color: #fff3cd;
-          border: 1px solid #ffeaa7;
-          color: #856404;
-        }
-        `;
-
-        // 將樣式添加到 head
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() {
-            const styleSheet = document.createElement("style");
-            styleSheet.textContent = alertStyles;
-            document.head.appendChild(styleSheet);
-          });
-        } else {
-          const styleSheet = document.createElement("style");
-          styleSheet.textContent = alertStyles;
-          document.head.appendChild(styleSheet);
-        }
-
-        /**
-         * 清空表單
-         */
-        function clearForm() {
-          // 清空所有 input 和 textarea
-          document.querySelectorAll("input[type='text'], input[type='number'], textarea, select").forEach(field => {
-            field.value = "";
-          });
-          
-          // 清空所有文件輸入
-          document.querySelectorAll("input[type='file']").forEach(input => {
-            input.value = "";
-          });
-          
-          // 重置狀態標示
-          if (document.getElementById("checkInStatus")) {
-            document.getElementById("checkInStatus").textContent = "未簽到";
-          }
-          if (document.getElementById("checkOutStatus")) {
-            document.getElementById("checkOutStatus").textContent = "未簽出";
-          }
-          
-          showSuccessMessage("表單已清空");
-        }
-
-        /**
-         * 主提交函數 - 從完整提交按鈕觸發
-         */
-        async function handleCompleteSubmit() {
-          try {
-            // 顯示加載狀態
-            showLoadingMessage("正在收集表單資料...");
-            
-            // 收集所有資料
-            const formData = await collectAllFormData();
-            
-            // 驗證表單
-            showLoadingMessage("正在驗證表單資料...");
-            const validation = validateForm(formData);
-            
-            if (!validation.valid) {
-              showErrorMessage("表單驗證失敗：\n" + validation.errors.join("\n"));
-              return;
-            }
-            
-            // 提交到後端
-            showLoadingMessage("正在提交資料到 Google Sheet 和 Drive...");
-            const result = await submitToBackend(formData);
-            
-            if (result.success) {
-              // 成功提交
-              const message = `✅ 工程日報已成功提交！
-              
-✓ 資料已保存到 Google Sheet (第 ${result.sheetRow} 行)
-✓ 已上傳 ${result.photosUploaded} 張照片
-✓ 照片存儲日期資料夾：${formData.reportDate}
-
-系統信息：
-- 提交時間：${formData.submissionTime}
-- 填報人：${formData.engineerName}
-- 工地代碼：${formData.projectCode}`;
-              
-              showSuccessMessage(message);
-              
-              // 可選：清空表單
-              setTimeout(() => {
-                if (confirm("提交完成！是否清空表單準備下一份日報？")) {
-                  clearForm();
-                }
-              }, 2000);
-            } else {
-              showErrorMessage("提交失敗: " + (result.error || "未知錯誤"));
-            }
-          } catch (error) {
-            console.error("提交過程出錯:", error);
-            showErrorMessage("提交過程出錯: " + error.message);
-          }
-        }
-        // ====== 全局配置 ======
+        // === 配置區域 ===
         const AUTH_CONFIG = {
             clientId: '240527365724-gg80b8eip9c8qq4qd40mem7r4799rjur.apps.googleusercontent.com',
-            allowedDomain: 'mekongkh.net' // 修改為你的公司domain
+            allowedDomain: 'mekongkh.net'
         };
+        // 這裡填入你部署好的 Apps Script URL
+        const GAS_URL = 'https://script.google.com/a/macros/mekongkh.net/s/AKfycby3rK30nrrmU3LPoMuur-dhn6Ey0YACa4_wGGgUDAhlMAQkhc20AdJgFULbhIx7YOxP/exec';
 
         let currentUser = null;
-        let formData = {};
 
-        // ====== 初始化 ======
-        document.addEventListener('DOMContentLoaded', function() {
-            initGoogle();
-            initEventListeners();
-            setDefaultDate();
-            attachWorkforceListeners();
-            attachMaterialListeners();
-        });
-
-        // ====== Google登入初始化 ======
-        function initGoogle() {
-            window.google.accounts.id.initialize({
+        // === 初始化 ===
+        window.onload = function() {
+            google.accounts.id.initialize({
                 client_id: AUTH_CONFIG.clientId,
                 callback: handleCredentialResponse
             });
+            google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), { theme: 'outline', size: 'large' });
+            document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+        };
 
-            window.google.accounts.id.renderButton(
-                document.getElementById('googleLoginBtn'),
-                {
-                    theme: 'outline',
-                    size: 'large',
-                    text: 'continue_with'
-                }
-            );
-        }
-
-        // ====== 登入回調 ======
-      function handleCredentialResponse(response) {
-    const token = response.credential;
-    // 使用你原本的 parseJwt 函數
-    const decoded = parseJwt(token); 
-    
-    // 驗證企業網域
-    if (!decoded.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) {
-        alert('❌ 只接受 @' + AUTH_CONFIG.allowedDomain + ' 企業帳號登入');
-        // 強制登出並重新載入，避免卡住
-        google.accounts.id.disableAutoSelect();
-        location.reload(); 
-        return;
-    }
-
-    // 儲存使用者資訊
-    currentUser = {
-        email: decoded.email,
-        name: decoded.name,
-        picture: decoded.picture
-    };
-
-    // 隱藏登入頁，顯示主程式
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    
-    // 初始化你的應用程式資料
-    initApp(); 
-}
-
-// 修改你原本的 submitForm 函數，讓它直接傳送到 Apps Script
-async function submitForm() {
-    // 1. 這裡保留你原本的欄位驗證 (errors.push 等等...)
-    
-    // 顯示上傳中
-    const submitBtn = document.querySelector('button[onclick="submitForm()"]');
-    submitBtn.innerText = "⏳ 正在同步至 Google Drive...";
-    submitBtn.disabled = true;
-
-    // 2. 收集資料
-    const formData = {
-        user: currentUser.email,
-        userName: currentUser.name,
-        siteName: document.getElementById('siteName').value,
-        workDescription: document.getElementById('workDescription').value,
-        // 照片需轉換成 Base64 字串傳送 (這部分需要額外處理 photos 陣列)
-        photos: getAllPhotosAsBase64() 
-    };
-
-    // 3. 傳送到你的 Apps Script URL
-    try {
-        const response = await fetch('你的_GOOGLE_APPS_SCRIPT_部署_URL', {
-            method: 'POST',
-            mode: 'no-cors', // 解決跨網域問題
-            body: JSON.stringify(formData)
-        });
-        
-        alert('✅ 資料與照片已成功存入 Google Drive 與 Sheet！');
-        // 清除草稿並重置頁面
-        localStorage.removeItem('draft_report');
-        location.reload();
-        
-    } catch (error) {
-        alert('❌ 上傳失敗：' + error);
-        submitBtn.disabled = false;
-        submitBtn.innerText = "重新提交";
-    }
-}
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
-
-        // ====== 登入成功 ======
-        function loginSuccess() {
+        // === 登入邏輯 ===
+        function handleCredentialResponse(response) {
+            const data = parseJwt(response.credential);
+            if (!data.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) {
+                alert('❌ 錯誤：僅限 ' + AUTH_CONFIG.allowedDomain + ' 帳號登入');
+                return;
+            }
+            currentUser = data;
+            document.getElementById('userEmail').textContent = data.email;
             document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashboardPage').style.display = 'flex';
-            document.getElementById('userEmail').textContent = currentUser.email;
-            document.getElementById('engineerName').value = currentUser.name;
-            loadFromLocalStorage();
+            document.getElementById('mainApp').style.display = 'flex';
         }
 
-        // ====== 登出 ======
-        function logout() {
-            window.google.accounts.id.disableAutoSelect();
-            currentUser = null;
-            formData = {};
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'flex';
+        function parseJwt(token) {
+            return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
         }
 
-        // ====== 頁面切換 ======
-        function initEventListeners() {
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const pageId = this.dataset.page;
-                    switchPage(pageId);
-                    updateNavButtons(pageId);
-                });
-            });
-        }
+        function logout() { location.reload(); }
 
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
-        function updateNavButtons(pageId) {
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.page === pageId) {
-                    btn.classList.add('active');
-                }
-            });
-        }
+        // === 照片處理 ===
+        document.getElementById('checkinPhotoInput').onchange = e => preview(e, 'checkinPreview');
+        document.getElementById('checkoutPhotoInput').onchange = e => preview(e, 'checkoutPreview');
 
-        // ====== 照片上傳 ======
-        document.getElementById('checkinPhotoInput')?.addEventListener('change', (e) => {
-            compressAndPreviewPhoto(e, 'checkinPhotoPreview');
-        });
-
-        document.getElementById('checkoutPhotoInput')?.addEventListener('change', (e) => {
-            compressAndPreviewPhoto(e, 'checkoutPhotoPreview');
-        });
-
-        document.getElementById('qualityPhotoInput')?.addEventListener('change', (e) => {
-            compressAndPreviewPhotos(e, 'qualityPhotoPreview');
-        });
-
-        function compressAndPreviewPhoto(event, previewElementId) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+        function preview(e, id) {
+            const file = e.target.files[0];
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById(previewElementId);
-                preview.innerHTML = `
-                    <div class="photo-item">
-                        <img src="${e.target.result}" alt="預覽">
-                    </div>
-                `;
-                formData[previewElementId] = e.target.result;
-                updateCheckinStatus();
+            reader.onload = function(ex) {
+                document.getElementById(id).innerHTML = `<img src="${ex.target.result}">`;
             };
             reader.readAsDataURL(file);
         }
 
-        function compressAndPreviewPhotos(event, previewElementId) {
-            const files = event.target.files;
-            const preview = document.getElementById(previewElementId);
-            preview.innerHTML = '';
+        async function fileToBase64(file) {
+            return new Promise((r, j) => {
+                const rd = new FileReader();
+                rd.onload = () => r(rd.result);
+                rd.readAsDataURL(file);
+            });
+        }
 
-            Array.from(files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'photo-item';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="預覽${index + 1}">
-                        <button class="photo-remove" onclick="this.parentElement.remove()">✕</button>
-                    `;
-                    preview.appendChild(div);
+        // === 提交邏輯 ===
+        async function submitForm() {
+            const siteName = document.getElementById('siteName').value;
+            const workDesc = document.getElementById('workDescription').value;
+            const file1 = document.getElementById('checkinPhotoInput').files[0];
+            const file2 = document.getElementById('checkoutPhotoInput').files[0];
+
+            if (!siteName || !workDesc || !file1 || !file2) {
+                alert('❌ 請填寫所有必填欄位並完成拍照！');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = '⏳ 資料上傳中，請勿關閉網頁...';
+
+            try {
+                const payload = {
+                    user: currentUser.email,
+                    userName: currentUser.name,
+                    siteName: siteName,
+                    workDescription: workDesc,
+                    photos: [
+                        { type: '簽到', base64: await fileToBase64(file1) },
+                        { type: '簽出', base64: await fileToBase64(file2) }
+                    ]
                 };
-                reader.readAsDataURL(file);
-            });
-        }
 
-        // ====== 簽到簽出狀態 ======
-        function updateCheckinStatus() {
-            const checkinPhoto = formData.checkinPhotoPreview;
-            const checkoutPhoto = formData.checkoutPhotoPreview;
-
-            if (checkinPhoto) {
-                document.getElementById('checkinStatus').classList.add('checked');
-                document.getElementById('checkinStatus').classList.remove('not-checked');
-                document.getElementById('checkinTime').textContent = new Date().toLocaleTimeString();
-            }
-
-            if (checkoutPhoto) {
-                document.getElementById('checkoutStatus').classList.add('checked');
-                document.getElementById('checkoutStatus').classList.remove('not-checked');
-                document.getElementById('checkoutTime').textContent = new Date().toLocaleTimeString();
-            }
-        }
-
-        // ====== 出工人數表格 ======
-        function attachWorkforceListeners() {
-            const tbody = document.getElementById('workforceTableBody');
-            tbody.addEventListener('input', function(e) {
-                if (e.target.matches('input[type="number"]')) {
-                    const row = e.target.closest('tr');
-                    const morning = parseFloat(row.querySelector('.workforce-morning').value) || 0;
-                    const afternoon = parseFloat(row.querySelector('.workforce-afternoon').value) || 0;
-                    const night = parseFloat(row.querySelector('.workforce-night').value) || 0;
-                    row.querySelector('.workforce-total').textContent = morning + afternoon + night;
-                }
-            });
-        }
-
-        function addWorkforceRow() {
-            const tbody = document.getElementById('workforceTableBody');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" class="workforce-name" placeholder="工種"></td>
-                <td><input type="number" class="workforce-morning" min="0" value="0"></td>
-                <td><input type="number" class="workforce-afternoon" min="0" value="0"></td>
-                <td><input type="number" class="workforce-night" min="0" value="0"></td>
-                <td><span class="workforce-total">0</span></td>
-            `;
-            tbody.appendChild(newRow);
-            attachWorkforceListeners();
-        }
-
-        // ====== 材料使用表格 ======
-        function attachMaterialListeners() {
-            const tbody = document.getElementById('materialsTableBody');
-            tbody.addEventListener('input', function(e) {
-                if (e.target.matches('input[type="number"]')) {
-                    const row = e.target.closest('tr');
-                    const arrived = parseFloat(row.querySelector('.material-arrived').value) || 0;
-                    const used = parseFloat(row.querySelector('.material-used').value) || 0;
-                    row.querySelector('.material-inventory').textContent = (arrived - used).toFixed(2);
-                }
-            });
-        }
-
-        function addMaterialRow() {
-            const tbody = document.getElementById('materialsTableBody');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" class="material-name" placeholder="材料名稱"></td>
-                <td><input type="text" class="material-unit" placeholder="噸/m³" style="width:50px;"></td>
-                <td><input type="number" class="material-arrived" min="0" step="0.01" value="0"></td>
-                <td><input type="number" class="material-used" min="0" step="0.01" value="0"></td>
-                <td><span class="material-inventory">0</span></td>
-            `;
-            tbody.appendChild(newRow);
-            attachMaterialListeners();
-        }
-
-        // ====== 機具設備表格 ======
-        function addEquipmentRow() {
-            const tbody = document.getElementById('equipmentTableBody');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" class="equipment-name" placeholder="設備名稱"></td>
-                <td><input type="text" class="equipment-desc" placeholder="使用說明"></td>
-                <td><input type="number" class="equipment-hours" min="0" step="0.5" value="0"></td>
-            `;
-            tbody.appendChild(newRow);
-        }
-
-        // ====== 品質缺陷 ======
-        function addQualityIssue() {
-            const desc = document.getElementById('qualityDesc').value;
-            const severity = document.getElementById('qualitySeverity').value;
-            const status = document.getElementById('qualityStatus').value;
-            const photos = document.getElementById('qualityPhotoPreview').querySelectorAll('img');
-
-            if (!desc.trim()) {
-                alert('請填入缺陷描述');
-                return;
-            }
-
-            if (photos.length === 0) {
-                alert('❌ 必須上傳至少一張照片');
-                return;
-            }
-
-            const tbody = document.getElementById('qualityTableBody');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>${desc}</td>
-                <td>${severity}</td>
-                <td>${status}</td>
-            `;
-            tbody.appendChild(newRow);
-
-            document.getElementById('qualityDesc').value = '';
-            document.getElementById('qualityPhotoInput').value = '';
-            document.getElementById('qualityPhotoPreview').innerHTML = '';
-        }
-
-        // ====== 設置預設日期 ======
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reportDate').value = today;
-        }
-
-        // ====== 保存單一頁面 ======
-        function savePage(pageName) {
-            alert(`✓ 已保存${pageName}頁面`);
-            autoSaveToLocalStorage();
-        }
-
-        // ====== 自動保存到localStorage ======
-        function autoSaveToLocalStorage() {
-            formData = {
-                reportDate: document.getElementById('reportDate').value,
-                engineerName: document.getElementById('engineerName').value,
-                siteCode: document.getElementById('siteCode').value,
-                siteLocation: document.getElementById('siteLocation').value,
-                projectName: document.getElementById('projectName').value,
-                phase: document.getElementById('phase').value,
-                weather: document.getElementById('weather').value,
-                plannedDays: document.getElementById('plannedDays').value,
-                actualDays: document.getElementById('actualDays').value,
-                remainingDays: document.getElementById('remainingDays').value,
-                progressToday: document.getElementById('progressToday').value,
-                cumulativeProgress: document.getElementById('cumulativeProgress').value,
-                workDescription: document.getElementById('workDescription').value,
-                differenceFromPlan: document.getElementById('differenceFromPlan').value,
-                reasonForDifference: document.getElementById('reasonForDifference').value,
-                countermeasures: document.getElementById('countermeasures').value,
-                importantMatters: document.getElementById('importantMatters').value,
-                vendorNotification: document.getElementById('vendorNotification').value,
-                constructionManager: document.getElementById('constructionManager').value,
-                siteDirector: document.getElementById('siteDirector').value,
-            };
-
-            localStorage.setItem(`report_${currentUser.email}_${new Date().toISOString().split('T')[0]}`, JSON.stringify(formData));
-        }
-
-        // ====== 從localStorage載入 ======
-        function loadFromLocalStorage() {
-            const today = new Date().toISOString().split('T')[0];
-            const key = `report_${currentUser.email}_${today}`;
-            const saved = localStorage.getItem(key);
-
-            if (saved) {
-                const data = JSON.parse(saved);
-                Object.keys(data).forEach(key => {
-                    const elem = document.getElementById(key);
-                    if (elem) elem.value = data[key];
+                // 使用 fetch 送出資料
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
                 });
+
+                alert('✅ 提交完成！照片已存入 Drive，資料已寫入 Sheet。');
+                location.reload();
+            } catch (err) {
+                alert('❌ 上傳失敗：' + err.message);
+                btn.disabled = false;
+                btn.innerText = '重新提交';
             }
-        }
-
-        // ====== 清空表單 ======
-        function resetForm() {
-            if (confirm('確定要清空所有資料嗎？')) {
-                document.getElementById('reportForm')?.reset();
-                setDefaultDate();
-                formData = {};
-                alert('✓ 已清空');
-            }
-        }
-
-        // ====== 下載JSON ======
-        function downloadJSON() {
-            autoSaveToLocalStorage();
-            const checkinPhotos = document.getElementById('checkinPhotoPreview').querySelectorAll('img');
-            const checkoutPhotos = document.getElementById('checkoutPhotoPreview').querySelectorAll('img');
-            const qualityPhotos = document.getElementById('qualityPhotoPreview').querySelectorAll('img');
-
-            const data = {
-                metadata: {
-                    reportDate: formData.reportDate,
-                    engineerName: formData.engineerName,
-                    engineerEmail: currentUser.email,
-                    siteCode: formData.siteCode,
-                    siteLocation: formData.siteLocation,
-                    projectName: formData.projectName,
-                    phase: formData.phase,
-                    weather: formData.weather,
-                },
-                schedule: {
-                    plannedDays: parseInt(formData.plannedDays) || 0,
-                    actualDays: parseInt(formData.actualDays) || 0,
-                    remainingDays: parseInt(formData.remainingDays) || 0,
-                    progressToday: parseFloat(formData.progressToday) || 0,
-                    cumulativeProgress: parseFloat(formData.cumulativeProgress) || 0,
-                },
-                workContent: {
-                    description: formData.workDescription,
-                    differenceFromPlan: formData.differenceFromPlan,
-                    reasonForDifference: formData.reasonForDifference,
-                    countermeasures: formData.countermeasures,
-                },
-                siteNotes: {
-                    importantMatters: formData.importantMatters,
-                    vendorNotification: formData.vendorNotification,
-                    signatures: {
-                        constructionManager: formData.constructionManager,
-                        siteDirector: formData.siteDirector,
-                    }
-                },
-                photos: {
-                    checkinCount: checkinPhotos.length,
-                    checkoutCount: checkoutPhotos.length,
-                    qualityCount: qualityPhotos.length,
-                },
-                systemInfo: {
-                    submittedAt: new Date().toISOString(),
-                    version: 2.0,
-                }
-            };
-
-            const filename = `日報_${formData.reportDate}_${formData.engineerName}.json`;
-            downloadFile(JSON.stringify(data, null, 2), filename, 'application/json');
-        }
-
-        function downloadFile(content, filename, type) {
-            const blob = new Blob([content], { type: type });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // ====== 完整提交驗證 ======
-        function submitForm() {
-            const checkinPhotos = document.getElementById('checkinPhotoPreview').querySelectorAll('img').length;
-            const checkoutPhotos = document.getElementById('checkoutPhotoPreview').querySelectorAll('img').length;
-            const qualityRows = document.getElementById('qualityTableBody').querySelectorAll('tr').length;
-            const qualityPhotos = document.getElementById('qualityPhotoPreview').querySelectorAll('img').length;
-
-            const errors = [];
-
-            if (!document.getElementById('reportDate').value) errors.push('❌ 報表日期未填');
-            if (!document.getElementById('siteCode').value) errors.push('❌ 工地代碼未填');
-            if (!document.getElementById('siteLocation').value) errors.push('❌ 施工地點未填');
-            if (!document.getElementById('projectName').value) errors.push('❌ 工程名稱未填');
-            if (!document.getElementById('plannedDays').value) errors.push('❌ 預定工期未填');
-            if (!document.getElementById('workDescription').value) errors.push('❌ 工作內容未填');
-            if (checkinPhotos === 0) errors.push('❌ 簽到照片未上傳');
-            if (checkoutPhotos === 0) errors.push('❌ 簽出照片未上傳');
-            if (qualityRows > 0 && qualityPhotos === 0) errors.push('❌ 有缺陷記錄但未上傳照片');
-
-            if (errors.length > 0) {
-                alert(errors.join('\n'));
-                return;
-            }
-
-            downloadJSON();
-            alert('✅ 表單已成功提交！JSON檔案已下載，請傳給專職工程師');
         }
     </script>
 </body>
