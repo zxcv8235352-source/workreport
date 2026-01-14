@@ -155,33 +155,49 @@
 
         // === 初始化 ===
         window.onload = function() {
-            google.accounts.id.initialize({
-                client_id: AUTH_CONFIG.clientId,
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), { theme: 'outline', size: 'large' });
-            document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
-        };
+    google.accounts.id.initialize({
+        client_id: AUTH_CONFIG.clientId,
+        callback: handleCredentialResponse
+    });
+    google.accounts.id.renderButton(document.getElementById('googleLoginBtn'), { theme: 'outline', size: 'large' }); [cite: 118]
+    document.getElementById('reportDate').value = new Date().toISOString().split('T')[0]; [cite: 118]
+
+    // 新增：檢查本地是否有登入紀錄
+    const savedUser = localStorage.getItem('engineering_user');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showMainApp(currentUser);
+    }
+};
 
         // === 登入邏輯 ===
-        function handleCredentialResponse(response) {
-            const data = parseJwt(response.credential);
-            if (!data.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) {
-                alert('❌ 錯誤：僅限 ' + AUTH_CONFIG.allowedDomain + ' 帳號登入');
-                return;
-            }
-            currentUser = data;
-            document.getElementById('userEmail').textContent = data.email;
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'flex';
-        }
+       function handleCredentialResponse(response) {
+    const data = parseJwt(response.credential); [cite: 119]
+    if (!data.email.endsWith('@' + AUTH_CONFIG.allowedDomain)) { [cite: 120]
+        alert('❌ 錯誤：僅限 ' + AUTH_CONFIG.allowedDomain + ' 帳號登入'); [cite: 120]
+        return; [cite: 121]
+    }
+    
+    currentUser = data;
+    // 新增：將使用者資料存入瀏覽器
+    localStorage.setItem('engineering_user', JSON.stringify(data));
+    showMainApp(data);
+}
 
+// 抽取出來的顯示邏輯
+function showMainApp(data) {
+    document.getElementById('userEmail').textContent = data.email; [cite: 121]
+    document.getElementById('loginPage').style.display = 'none'; [cite: 122]
+    document.getElementById('mainApp').style.display = 'flex'; [cite: 122]
+}
         function parseJwt(token) {
             return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
         }
 
-        function logout() { location.reload(); }
-
+        function logout() { 
+    localStorage.removeItem('engineering_user'); // 新增這行
+    location.reload(); [cite: 123]
+}
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -241,20 +257,17 @@
 
     try {
         // 4. 重新封裝資料結構 (加入 PDF 對應欄位) [cite: 134, 135]
-        const payload = {
-            user: currentUser.email,
-            userName: currentUser.name,
-            siteName: siteName,
-            reportDate: reportDate,
-            workers: workers.join(", "),      // 存入工種人數
-            materials: document.getElementById('materialStatus').value, // 存入材料
-            equipment: document.getElementById('equipmentStatus').value, // 存入機具
-            workDescription: workDesc,
-            photos: [
-                { type: '簽到', base64: await fileToBase64(file1) },
-                { type: '簽出', base64: await fileToBase64(file2) }
-            ]
-        };
+        const payload ={
+    user: currentUser.email, [cite: 133]
+    userName: currentUser.name, [cite: 133]
+    siteName: document.getElementById('siteName').value, [cite: 133]
+    reportDate: document.getElementById('reportDate').value,
+    workers: workers.join(", "),      // 確保這裡有抓到工種
+    materials: document.getElementById('materialStatus').value,
+    equipment: document.getElementById('equipmentStatus').value,
+    workDescription: document.getElementById('workDescription').value, [cite: 134]
+    photos: [ /* 照片邏輯 [cite: 134, 135] */ ]
+};
 
         // 5. 送出資料 [cite: 136]
         await fetch(GAS_URL, {
