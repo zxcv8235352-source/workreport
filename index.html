@@ -72,10 +72,12 @@
             </div>
 
             <div class="content-wrapper">
-                <div class="nav-tabs">
-                    <button class="nav-btn active" onclick="switchPage('page-1')">基本資訊</button>
-                    <button class="nav-btn" onclick="switchPage('page-2')">工作內容</button>
-                </div>
+              <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchPage('page-1')">基本資訊</button>
+    <button class="nav-btn" onclick="switchPage('page-2')">工種/人數</button>
+    <button class="nav-btn" onclick="switchPage('page-3')">材料/機具</button>
+    <button class="nav-btn" onclick="switchPage('page-4')">工作紀錄</button>
+</div>
 
                 <div id="page-1" class="page active">
                     <div class="page-content">
@@ -95,8 +97,33 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="page-2" class="page">
+    <div class="page-content">
+        <h3>👷 工種人數</h3>
+        <div id="workerList">
+            <div class="form-group" style="display: flex; gap: 5px;">
+                <input type="text" placeholder="工種(如:模板工)" class="worker-type">
+                <input type="number" placeholder="人數" class="worker-num" style="width: 80px;">
+            </div>
+        </div>
+        <button type="button" onclick="addWorkerRow()" style="margin-bottom:15px;">+ 新增工種</button>
+    </div>
+</div>
+
+<div id="page-3" class="page">
+    <div class="page-content">
+        <div class="form-group">
+            <label>📦 主要材料使用情形</label>
+            <textarea id="materialStatus" placeholder="材料名稱、進場量、使用量..." rows="4"></textarea>
+        </div>
+        <div class="form-group">
+            <label>🚜 主要機具設備使用</label>
+            <textarea id="equipmentStatus" placeholder="設備名稱、數量、使用說明..." rows="4"></textarea>
+        </div>
+    </div>
+</div>
+
+                <div id="page-4" class="page">
                     <div class="page-content">
                         <div class="form-group">
                             <label class="required">今日工作內容</label>
@@ -184,48 +211,79 @@
         }
 
         // === 提交邏輯 ===
-        async function submitForm() {
-            const siteName = document.getElementById('siteName').value;
-            const workDesc = document.getElementById('workDescription').value;
-            const file1 = document.getElementById('checkinPhotoInput').files[0];
-            const file2 = document.getElementById('checkoutPhotoInput').files[0];
+       async function submitForm() {
+    // 1. 取得基本資訊 [cite: 130]
+    const siteName = document.getElementById('siteName').value;
+    const reportDate = document.getElementById('reportDate').value; // 新增日期欄位
+    const workDesc = document.getElementById('workDescription').value;
+    const file1 = document.getElementById('checkinPhotoInput').files[0];
+    const file2 = document.getElementById('checkoutPhotoInput').files[0];
 
-            if (!siteName || !workDesc || !file1 || !file2) {
-                alert('❌ 請填寫所有必填欄位並完成拍照！');
-                return;
-            }
-
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = '⏳ 資料上傳中，請勿關閉網頁...';
-
-            try {
-                const payload = {
-                    user: currentUser.email,
-                    userName: currentUser.name,
-                    siteName: siteName,
-                    workDescription: workDesc,
-                    photos: [
-                        { type: '簽到', base64: await fileToBase64(file1) },
-                        { type: '簽出', base64: await fileToBase64(file2) }
-                    ]
-                };
-
-                // 使用 fetch 送出資料
-                await fetch(GAS_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-
-                alert('✅ 提交完成！照片已存入 Drive，資料已寫入 Sheet。');
-                location.reload();
-            } catch (err) {
-                alert('❌ 上傳失敗：' + err.message);
-                btn.disabled = false;
-                btn.innerText = '重新提交';
-            }
+    // 2. 蒐集「工種與人數」資料 (新增)
+    const workers = [];
+    document.querySelectorAll('#workerList .form-group').forEach(group => {
+        const type = group.querySelector('.worker-type').value;
+        const num = group.querySelector('.worker-num').value;
+        if(type && num) {
+            workers.push(`${type}(${num}人)`);
         }
+    });
+
+    // 3. 驗證必填欄位 [cite: 131]
+    if (!siteName || !workDesc || !file1 || !file2) {
+        alert('❌ 請填寫基本資訊並完成拍照！');
+        return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; [cite: 132]
+    btn.innerText = '⏳ 資料上傳中...'; [cite: 133]
+
+    try {
+        // 4. 重新封裝資料結構 (加入 PDF 對應欄位) [cite: 134, 135]
+        const payload = {
+            user: currentUser.email,
+            userName: currentUser.name,
+            siteName: siteName,
+            reportDate: reportDate,
+            workers: workers.join(", "),      // 存入工種人數
+            materials: document.getElementById('materialStatus').value, // 存入材料
+            equipment: document.getElementById('equipmentStatus').value, // 存入機具
+            workDescription: workDesc,
+            photos: [
+                { type: '簽到', base64: await fileToBase64(file1) },
+                { type: '簽出', base64: await fileToBase64(file2) }
+            ]
+        };
+
+        // 5. 送出資料 [cite: 136]
+        await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(payload)
+        });
+
+        alert('✅ 提交完成！資料已根據施工日報表項目存入。'); [cite: 137]
+        location.reload();
+    } catch (err) {
+        alert('❌ 上傳失敗：' + err.message); [cite: 138]
+        btn.disabled = false;
+        btn.innerText = '重新提交';
+    }
+}
+
+// 輔助函數：新增工種輸入列 (放在 submitForm 函數外面)
+function addWorkerRow() {
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    div.style.display = 'flex';
+    div.style.gap = '5px';
+    div.innerHTML = `
+        <input type="text" placeholder="工種" class="worker-type">
+        <input type="number" placeholder="人數" class="worker-num" style="width: 80px;">
+    `;
+    document.getElementById('workerList').appendChild(div);
+}
     </script>
 </body>
 </html>
